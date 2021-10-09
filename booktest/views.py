@@ -3,11 +3,33 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.template import loader, RequestContext
 from booktest.models import BookInfo, AreaInfo
 from datetime import date, datetime, timedelta
+from PIL import Image, ImageDraw, ImageFont
+# import six
+# from six.moves.urllib.request import urlopen
+# from six.moves.urllib.parse import urljoin
+# from django.utils.six import BytesIO
+from six import BytesIO
 
 
 # Create your views here.
 # 1：定义视图函数，HttpRequest
 # 2: 进行url配置，建立URL与视图的对应关系
+
+def login_required(view_func):
+    """登录判断装饰器"""
+
+    def wrapper(request, *args, **kwargs):
+        # 判断用户是否登录
+        if request.session.has_key('islogin'):
+            # 用户已登录，调用对应的视图
+            return view_func(request, *args, **kwargs)
+        else:
+            # 用户未登录，跳转到登录页
+            return redirect('/login')
+
+    return wrapper
+
+
 def my_render(request, template_path, context_dict={}):
     # 进行处理，和M和T进行交互
     # 使用模版文件
@@ -28,6 +50,23 @@ def my_render(request, template_path, context_dict={}):
 def index(request):
     books = BookInfo.objects.all()
     return render(request, 'booktest/index.html', {'books': books})
+
+
+def my_render1(request, template_path, context={}):
+    """自定义模版"""
+    # 加载模版文件，获取一个模版对象
+    temp = loader.get_template(template_path)
+    # 定义模版上下文，给模版文件传递数据
+    context = RequestContext(request, context)
+    # 模版渲染，产生一个替换的html内容
+    res_html = temp.render(context)
+    # 返回应答
+    return HttpResponse(res_html)
+
+
+def index1(request):
+    """使用模版文件"""
+    return my_render1(request, 'booktest/index1.html')
 
 
 def create(request):
@@ -96,6 +135,15 @@ def login_check(request):
     username = request.POST.get('username')
     password = request.POST.get('password')
     remember = request.POST.get('remember')
+    # 获取用户输入的验证码
+    vcode1 = request.POST.get('vcode')
+    # 获取保存在session中的验证码
+    vcode2 = request.session.get('verifycode')
+    # 进行验证码校验
+    if vcode1.lower() != vcode2.lower():
+        msg = '验证码有误，请重新输入～'
+        request.session['msg'] = msg
+        return redirect('/login')
     # 校验登录内容
     if username == 'test' and password == '123456':
         # 登录成功，跳转首页
@@ -105,9 +153,12 @@ def login_check(request):
             response.set_cookie('username', username, max_age=60)
         # 设置表示已登录过的session
         request.session['islogin'] = True
+        request.session['username'] = username
         return response
     else:
         # 登录失败，跳转登录页
+        msg = '用户名或密码错误，请重新输入～'
+        request.session['msg'] = msg
         return redirect('/login')
 
 
@@ -167,7 +218,7 @@ def get_session(request):
     password = request.session['password']
     # 设置session过期时间单位为秒，0表示关联浏览器后失效
     # request.session.set_expiry(30)
-    return HttpResponse(username+" : "+str(password))
+    return HttpResponse(username + " : " + str(password))
 
 
 def clear_session(request):
@@ -180,3 +231,62 @@ def flush_session(request):
     """清除session整条信息"""
     request.session.flush()
     return HttpResponse('清除session整条信息')
+
+
+@login_required
+def change_pwd(request):
+    """显示修改密码页面"""
+    return render(request, 'booktest/change_pwd.html')
+
+
+@login_required
+def change_pwd_action(request):
+    """显示修复密码完成后的页面"""
+    password = request.POST.get('pwd')
+    username = request.session.get('username')
+    return HttpResponse('{0}的新密码为：{1}'.format(username, password))
+
+
+def verify_code(request):
+    """验证码函数"""
+    # 引入随机函数模块
+    import random
+    # 定义变量，用于画面的背景色、宽、高
+    bgcolor = (random.randrange(20, 100), random.randrange(
+        20, 100), 255)
+    width = 100
+    height = 25
+    # 创建画面对象
+    im = Image.new('RGB', (width, height), bgcolor)
+    # 创建画笔对象
+    draw = ImageDraw.Draw(im)
+    # 调用画笔的point()函数绘制噪点
+    for i in range(0, 100):
+        xy = (random.randrange(0, width), random.randrange(0, height))
+        fill = (random.randrange(0, 255), 255, random.randrange(0, 255))
+        draw.point(xy, fill=fill)
+    # 定义验证码的备选值
+    str1 = 'ABCD123EFGHIJK456LMNOPQRS789TUVWXYZ0'
+    # 随机选取4个值作为验证码
+    rand_str = ''
+    for i in range(0, 4):
+        rand_str += str1[random.randrange(0, len(str1))]
+    # 构造字体对象，ubuntu的字体路径为“/usr/share/fonts/truetype/freefont”
+    font = ImageFont.truetype('FreeMono.ttf', 23)
+    # 构造字体颜色
+    fontcolor = (255, random.randrange(0, 255), random.randrange(0, 255))
+    # 绘制4个字
+    draw.text((5, 2), rand_str[0], font=font, fill=fontcolor)
+    draw.text((25, 2), rand_str[1], font=font, fill=fontcolor)
+    draw.text((50, 2), rand_str[2], font=font, fill=fontcolor)
+    draw.text((75, 2), rand_str[3], font=font, fill=fontcolor)
+    # 释放画笔
+    del draw
+    # 存入session，用于做进一步验证
+    request.session['verifycode'] = rand_str
+    # 内存文件操作
+    buf = BytesIO()
+    # 将图片保存在内存中，文件类型为png
+    im.save(buf, 'png')
+    # 将内存中的图片数据返回给客户端，MIME类型为图片png
+    return HttpResponse(buf.getvalue(), 'image/png')

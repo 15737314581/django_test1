@@ -20,6 +20,10 @@ urlpatterns = [
     re_path(r'^set_session$', views.set_session),  # 设置session
     re_path(r'^get_session$', views.get_session),  # 获取session
     re_path(r'^clear_session$', views.clear_session),  # 清除session
-    re_path(r'^flush_session$', views.flush_session)  # 清除session
+    re_path(r'^flush_session$', views.flush_session),  # 清除session
+    re_path(r'^index1$', views.index1),  # 使用模版文件
+    re_path(r'^change_pwd$', views.change_pwd),  # 显示修改密码页面
+    re_path(r'^change_pwd_action$', views.change_pwd_action),  # 显示修改密码后的页面
+    re_path(r'^verify_code$', views.verify_code)  # 生成验证码
 
 ]

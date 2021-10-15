@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>省市县详情案例</title>
+    <script src="/static/js/jquery-1.12.4.min.js"></script>
+    <script>
+        $(function () {
+            // 发起一个ajax请求/prov, 获取所有省级地区的信息(获取信息，用get,涉及到信息修改，使用post)
+            $.get('/prov', function (data) {
+                // 回调函数
+                // 获取返回的json数据
+                res = data.data;
+                // 获取下拉列表框
+                prov = $('#prov');
+                // 遍历res，获取省级地区id和名称,每一个元素为[地区id,地区名称]
+                // 传统写法
+                /*for (i = 0; i < res.length; i++) {
+                   prov_id = res[i][0];
+                   prov_atitle = res[i][1];
+                   option_str = '<option value="'+prov_id+'">'+prov_atitle+'</option>'
+                   // 向下拉框中追加元素
+                   prov.append(option_str)
+                }
+                */
+                // 新式写法
+                $.each(res, function (index, item) {
+                    prov_id = item[0];
+                    prov_atitle = item[1];
+                    option_str = '<option value="' + prov_id + '">' + prov_atitle + '</option>'
+                    // 向下拉框中追加元素
+                    prov.append(option_str)
+
+                })
+            })
+            // 绑定prov下拉列表框的change事件，获取省份下面的市级信息
+            $('#prov').change(function () {
+                // 发起一个ajax请求/city, 获取省份下面的市级信息
+                prov_id = $(this).val()
+                $.get('/city' + prov_id, function (data) {
+                    // 回掉函数
+                    city = $('#city');
+                    city.empty().append('<option>---请选择市---</option>');
+                    dis = $('#dis');
+                    dis.empty().append('<option>---请选择县---</option>');
+                    res = data.data;
+                    $.each(res, function (index, item) {
+                        city_id = item[0];
+                        city_atitle = item[1];
+                        option_str = '<option value="' + city_id + '">' + city_atitle + '</option>'
+                        // 向下拉框中追加元素
+                        city.append(option_str)
+                    })
+                })
+            })
+
+            // 绑定city下拉列表框的change事件，获取市下面的县级信息
+            $('#city').change(function () {
+                // 发起一个ajax请求/dis, 获取省份下面的市级信息
+                city_id = $(this).val();
+                $.get('/dis' + city_id, function (data) {
+                    // 回掉函数
+                    dis = $('#dis');
+                    dis.empty().append('<option>---请选择县---</option>');
+                    res = data.data;
+                    $.each(res, function (index, item) {
+                        dis_id = item[0];
+                        dis_atitle = item[1];
+                        option_str = '<option value="' + dis_id + '">' + dis_atitle + '</option>';
+                        // 向下拉框中追加元素
+                        dis.append(option_str);
+                    })
+                })
+            })
+
+
+        })
+    </script>
+</head>
+<body>
+<select id="prov">
+    <option>---请选择省---</option>
+</select>
+<select id="city">
+    <option>---请选择市---</option>
+</select>
+<select id="dis">
+    <option>---请选择县---</option>
+</select>
+</body>
+</html>

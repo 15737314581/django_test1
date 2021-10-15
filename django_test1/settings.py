@@ -47,6 +47,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'booktest.middleware.BlockedIPSMiddleware', # 注册中间件类
+    'booktest.middleware.TestMiddleware', # 注册中间件类
 ]
 
 ROOT_URLCONF = 'django_test1.urls'
@@ -122,7 +124,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
-
+# 设置访问静态文件对应的url地址
 STATIC_URL = '/static/'
 # 配置静态文件的保存目录
 STATICFILES_DIRS = [os.path.join(BASE_DIR,'static')]
@@ -131,5 +133,8 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR,'static')]
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# 设置上传文件的保存目录
+MEDIA_ROOT = os.path.join(BASE_DIR,'static/media')
 
 

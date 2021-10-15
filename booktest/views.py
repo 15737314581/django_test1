@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.template import loader, RequestContext
-from booktest.models import BookInfo, AreaInfo
+from booktest.models import BookInfo, AreaInfo, PicTest
 from datetime import date, datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
 # import six
@@ -10,10 +10,11 @@ from PIL import Image, ImageDraw, ImageFont
 # from django.utils.six import BytesIO
 from six import BytesIO
 
-
 # Create your views here.
 # 1：定义视图函数，HttpRequest
 # 2: 进行url配置，建立URL与视图的对应关系
+from django_test1 import settings
+
 
 def login_required(view_func):
     """登录判断装饰器"""
@@ -289,4 +290,100 @@ def verify_code(request):
     # 将图片保存在内存中，文件类型为png
     im.save(buf, 'png')
     # 将内存中的图片数据返回给客户端，MIME类型为图片png
-    return HttpResponse(buf.getvalue(), 'image/png')
+    return HttpResponse(buf.getvalue(), 'images/png')
+
+
+def url_reverse(request):
+    """url反向解析页面"""
+    return render(request, 'booktest/url_reverse.html')
+
+
+from django.urls import reverse
+
+
+def view_reverse(request):
+    """视图中的反向解析"""
+    # 重定向到/index
+    url = reverse('booktest:index')
+    return redirect(url)
+
+
+def static_test(request):
+    """展示静态文件"""
+    print('视图函数被调用')
+    return render(request, 'booktest/static_test.html')
+
+
+def show_upload(request):
+    """展示上传图片页面"""
+    return render(request, 'booktest/upload_pic.html')
+
+
+def upload_action(request):
+    """上传图片处理"""
+    # 获取上传文件的处理对象
+    pic = request.FILES['pic']
+    pic_path = '{0}/booktest/{1}'.format(settings.MEDIA_ROOT, pic.name)
+
+    # 创建文件
+    with open(pic_path, 'wb') as f:
+        # 获取上传文件的内容并写入到创建的文件中
+        for content in pic.chunks():
+            f.write(content)
+
+    # 在数据库中保存上传记录
+    PicTest.objects.create(goods_pic='booktest/{}'.format(pic.name))
+
+    # 返回
+    return HttpResponse('ok')
+
+
+from django.core.paginator import Paginator
+
+
+def show_area(request, pindex):
+    """分页显示省级信息"""
+    # 查询出所有省级地区信息
+    areas = AreaInfo.objects.filter(aParent__isnull=True)
+    # 分页
+    paginator = Paginator(areas, 10)
+    print(paginator.num_pages)
+    print(paginator.page_range)
+    if pindex == '':
+        # 默认展示第一页内容
+        pindex = 1
+    else:
+        pindex = int(pindex)
+    # 获取第pindex页的内容
+    page = paginator.page(pindex)
+    return render(request, 'booktest/show_area.html', {'areas': areas, 'page': page})
+
+
+def areas_detail(request):
+    """省市县选中案例"""
+    return render(request, 'booktest/areas_detail.html')
+
+
+def prov(request):
+    """获取所有省级地区的信息"""
+    areas = AreaInfo.objects.filter(aParent__isnull=True)
+    # 遍历areas 返回一个json对象
+    areas_list = []
+    for area in areas:
+        areas_list.append((area.id, area.atitle))
+
+    return JsonResponse({'data': areas_list})
+
+
+def city(request,pid):
+    """获取省下面的市级信息"""
+    # 获取id对应的省份对象
+    # area = AreaInfo.objects.get(id=pid)
+    # 获取该省份下面的所有市级信息
+    # areas = area.areainfo_set.all()
+    areas = AreaInfo.objects.filter(aParent=pid)
+    areas_list = []
+    for area in areas:
+        areas_list.append((area.id, area.atitle))
+
+    return JsonResponse({'data': areas_list})

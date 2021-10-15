@@ -161,9 +161,28 @@ class EmployeeDetailInfo(models.Model):
 class AreaInfo(models.Model):
     """地区模型类"""
     # 地区名称
-    atitle = models.CharField(max_length=20)
+    atitle = models.CharField(verbose_name='标题', max_length=20)
     # 关系属性，代表当前地区的上级地区
     aParent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.atitle
+
+    def title(self):
+        return self.atitle
+
+    title.admin_order_field = 'atitle'
+    title.short_description = '地区名称'
+
+    def parent(self):
+        # 返回父级标题
+        if self.aParent is None:
+            return ''
+        return self.aParent.atitle
+    parent.short_description = '父级地区名称'
+
+
+class PicTest(models.Model):
+    """上传图片"""
+    # 商品图片
+    goods_pic = models.ImageField(upload_to='booktest')

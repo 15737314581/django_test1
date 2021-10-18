@@ -137,4 +137,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # 设置上传文件的保存目录
 MEDIA_ROOT = os.path.join(BASE_DIR,'static/media')
 
+# 设置redis存储session信息
+SESSION_ENGINE = 'redis_sessions.session'
+SESSION_REDIS_HOST = 'localhost'
+SESSION_REDIS_PORT = 6379
+SESSION_REDIS_DB = 2
+SESSION_REDIS_PASSWORD = ''
+SESSION_REDIS_PREFIX = 'session' # session:唯一标识码
+# SESSION_COOKIE_AGE = 60*5 # 设置session失效时间,单位为秒
+
+
 

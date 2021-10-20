@@ -48,7 +48,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # 'booktest.middleware.BlockedIPSMiddleware', # 注册中间件类
-    'booktest.middleware.TestMiddleware', # 注册中间件类
+    'booktest.middleware.TestMiddleware',  # 注册中间件类
+    'tinymce',  # 富文本编辑器
 ]
 
 ROOT_URLCONF = 'django_test1.urls'
@@ -127,7 +128,7 @@ USE_TZ = True
 # 设置访问静态文件对应的url地址
 STATIC_URL = '/static/'
 # 配置静态文件的保存目录
-STATICFILES_DIRS = [os.path.join(BASE_DIR,'static')]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -135,7 +136,7 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR,'static')]
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # 设置上传文件的保存目录
-MEDIA_ROOT = os.path.join(BASE_DIR,'static/media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'static/media')
 
 # 设置redis存储session信息
 SESSION_ENGINE = 'redis_sessions.session'
@@ -143,8 +144,13 @@ SESSION_REDIS_HOST = 'localhost'
 SESSION_REDIS_PORT = 6379
 SESSION_REDIS_DB = 2
 SESSION_REDIS_PASSWORD = ''
-SESSION_REDIS_PREFIX = 'session' # session:唯一标识码
+SESSION_REDIS_PREFIX = 'session'  # session:唯一标识码
 # SESSION_COOKIE_AGE = 60*5 # 设置session失效时间,单位为秒
 
 
-
+# 富文本编辑器配置
+TINYMCE_DEFAULT_CONFIG = {
+    'theme': 'advanced',
+    'width': 600,
+    'height': 400,
+}
